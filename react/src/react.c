@@ -81,8 +81,14 @@ struct cell *create_compute2_cell(
   return R->cell = C;
 }
 
+static int op_num = 0;
 
 int get_cell_value(struct cell *C) {
+  if (C->op_num == op_num)
+    return C->data;
+
+  C->op_num = op_num;
+
   switch (C->arity) {
     case 0: 
       return C->data;
@@ -117,6 +123,8 @@ static void publish(struct cell *C, int i) {
 void set_cell_value(struct cell *C, int new_value) {
   if (new_value == C->data)
     return;
+
+  op_num++;
 
   C->data = new_value;
 
@@ -154,80 +162,3 @@ void remove_callback(struct cell *C, callback_id n) {
   if (cb->next)
     cb->next = cb->next->next;
 }
-
-/*
-static int big_if_three(int x) {
-   return x < 3 ? 111 : 222;
-}
-
-void console_log(void *y, int x) {
-  int i = *((int *) y);
-  printf("console_log: %d %d\n", i, x);
-}
-
-int main() {
-   struct reactor *r = create_reactor();
-   struct cell *input = create_input_cell(r, 1);
-   struct cell *output = create_compute1_cell(r, input, big_if_three);
-
-   int Y = 42; 
-   add_callback(output, &Y, console_log);
-
-   set_cell_value(input, 2);
-
-   set_cell_value(input, 4);
-}
-static int N_callbacks = 0;
-static void print_plus(void *arg, int i) {
-  int x = *((int*) arg);
-  printf(
-   "N_callbacks: %d, %d + %d = %d\n", 
-    N_callbacks++, x, i, x + i
-  );
-}
-
-static void print_minus(void *arg, int i) {
-  int x = *((int*) arg);
-  printf(
-   "N_callbacks: %d, %d - %d = %d\n", 
-    N_callbacks++, x, i, x - i
-  );
-}
-
-static int x_plus_1(int x) {
-  return x + 1;
-}
-
-static int x_plus_y_plus_3(int x, int y) {
-  return x + y + 3;
-}
-
-int main() {
-  struct reactor *R  = create_reactor();
-  struct cell *input = create_input_cell(R, 0);
-  int r1 = get_cell_value(input);
-  printf("r1 = %d\n", r1);
-
-  int X = 42;
-
-  add_callback(input, &X, print_plus);
-
-  set_cell_value(input, 7);
-
-  int r2 = get_cell_value(input);
-  printf("r2 = %d\n", r2);
-
-  int Y = 100;
-  struct cell *C1 = create_compute1_cell(R, input, x_plus_1);
-  add_callback(C1, &Y, print_minus);
-
-  set_cell_value(input, 8);
-
-  int Z = 200;
-  struct cell *C2 = create_compute2_cell(R, input, C1, x_plus_y_plus_3);
-  add_callback(C2, &Z, print_plus);
-  add_callback(C2, &Z, print_minus);
-
-  set_cell_value(input, 8);
-}
-*/
