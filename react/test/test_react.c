@@ -180,7 +180,6 @@ static void test_callbacks_only_fire_on_change(void)
 
 static void test_callbacks_can_be_added_and_removed(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 11);
    struct cell *output = create_compute1_cell(r, input, plus1);
@@ -210,7 +209,6 @@ static void test_callbacks_can_be_added_and_removed(void)
 
 static void test_removing_most_recent_callback(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 11);
    struct cell *output = create_compute1_cell(r, input, plus1);
@@ -232,7 +230,6 @@ static void test_removing_most_recent_callback(void)
 
 static void test_removing_a_callback_multiple_times(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 11);
    struct cell *output = create_compute1_cell(r, input, plus1);
@@ -266,7 +263,6 @@ static int times(int x, int y)
 
 static void test_callbacks_only_called_once_even_if_multiple_inputs_change(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 1);
    struct cell *plus_one = create_compute1_cell(r, input, plus1);
@@ -292,7 +288,6 @@ static int minus(int x, int y)
 
 static void test_callbacks_not_called_if_inputs_change_but_output_doesnt(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 1);
    struct cell *plus_one = create_compute1_cell(r, input, plus1);

@@ -110,14 +110,8 @@ static void publish(struct cell *C, int i) {
   for (callback_t *cb = C->callbacks; cb != NULL; cb = cb->next)
     (cb->f)(cb->arg, new_value);
 
-  for (subscriber_t *S = C->subscribers; S != NULL; S = S->next) {
-    struct cell *consumer = (struct cell *)(S->consumer);
-    if (consumer == C) {
-      printf("WTF\n");
-      continue;
-    }
-    publish(consumer, i + 1);
-  }
+  for (subscriber_t *S = C->subscribers; S != NULL; S = S->next)
+    publish((struct cell *)(S->consumer), i + 1);
 }
 
 void set_cell_value(struct cell *C, int new_value) {
@@ -145,7 +139,20 @@ callback_id add_callback(struct cell *C, void * arg, callback f) {
 }
 
 void remove_callback(struct cell *C, callback_id n) {
-  printf("lol - fuck off %d %d\n", C->arity, n);
+  if (!C->callbacks)
+    return;
+  
+  if (C->callbacks->cb_id == n) {
+    C->callbacks = C->callbacks->next;
+    return;
+  }
+
+  callback_t *cb = C->callbacks;
+  while (cb->next && cb->next->cb_id != n)
+    cb = cb->next;
+
+  if (cb->next)
+    cb->next = cb->next->next;
 }
 
 /*
