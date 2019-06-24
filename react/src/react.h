@@ -6,6 +6,16 @@
 typedef int (*compute1) (int);
 typedef int (*compute2) (int, int);
 
+typedef void (*callback) (void *, int);
+typedef int callback_id;
+
+typedef struct boxed_callback {
+  struct boxed_callback *next;
+  callback_id cb_id;
+  callback    f;
+  void        *arg;
+} callback_t;
+
 struct cell {
   struct cell *next;
   uint8_t     arity;
@@ -15,6 +25,9 @@ struct cell {
   };
   struct cell *args[2];
   int         data;
+
+  int        next_id;
+  callback_t *callbacks;
 };
 
 struct reactor {
@@ -39,8 +52,6 @@ struct cell *create_compute2_cell(struct reactor *, struct cell *,
 int get_cell_value(struct cell *);
 void set_cell_value(struct cell *, int new_value);
 
-typedef void (*callback) (void *, int);
-typedef int callback_id;
 
 // The callback should be called with the same void * given in add_callback.
 callback_id add_callback(struct cell *, void *, callback);

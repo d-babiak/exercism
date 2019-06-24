@@ -82,22 +82,63 @@ int get_cell_value(struct cell *C) {
 }
 
 void set_cell_value(struct cell *C, int new_value) {
-  // todo - subs
   C->data = new_value;
+
+  for (callback_t *cb = C->callbacks; cb != NULL; cb = cb->next)
+    (cb->f)(cb->arg, new_value);
 }
 
-/*
-typedef void (*callback) (void *, int);
-typedef int callback_id;
-*/
-
-// The callback should be called with the same void * given in add_callback.
 callback_id add_callback(struct cell *C, void * arg, callback f) {
-  f(arg, C->data);
-  static int N = 0; // hmm...
-  return N++;
+  callback_t *cb = malloc(sizeof(callback_t));
+  memset(cb, 0, sizeof(callback_t));
+
+  cb->next  = C->callbacks;
+  cb->cb_id = C->next_id;
+  cb->f     = f;
+  cb->arg   = arg; 
+
+  C->callbacks = cb;
+  C->next_id  += 1;
+
+  return cb->cb_id;
 }
 
 void remove_callback(struct cell *C, callback_id n) {
-  printf("removed! %d %d\n", C->data, n);
+  printf("lol - fuck off %d %d\n", C->arity, n);
+}
+
+static int N_callbacks = 0;
+static void print_plus(void *arg, int i) {
+  int x = *((int*) arg);
+  printf(
+   "N_callbacks: %d, %d + %d = %d\n", 
+    N_callbacks++, x, i, x + i
+  );
+}
+
+static void print_minus(void *arg, int i) {
+  int x = *((int*) arg);
+  printf(
+   "N_callbacks: %d, %d - %d = %d\n", 
+    N_callbacks++, x, i, x - i
+  );
+}
+
+int main() {
+  struct reactor *R  = create_reactor();
+  struct cell *input = create_input_cell(R, 0);
+  int r1 = get_cell_value(input);
+  printf("r1 = %d\n", r1);
+
+  int X = 42;
+
+  add_callback(input, &X, print_plus);
+
+  set_cell_value(input, 7);
+
+  add_callback(input, &X, print_minus);
+  set_cell_value(input, 7);
+
+  int r2 = get_cell_value(input);
+  printf("r2 = %d\n", r2);
 }
