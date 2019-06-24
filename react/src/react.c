@@ -35,6 +35,16 @@ struct cell *create_input_cell(struct reactor *R, int initial_value) {
   return R->cell = C;
 }
 
+static void add_subscriber(struct cell *producer, struct cell *consumer) {
+  subscriber_t *S = malloc(sizeof(subscriber_t));
+  memset(S, 0, sizeof(subscriber_t));
+
+  S->next = producer->subscribers;
+  S->consumer = (void *)consumer;
+
+  producer->subscribers = S;
+}
+
 struct cell *create_compute1_cell(
   struct reactor *R, struct cell *in0, compute1 f
 ) {
@@ -46,6 +56,8 @@ struct cell *create_compute1_cell(
   C->f1      = f;
   C->args[0] = in0;
 
+  add_subscriber(in0, C);
+  
   return R->cell = C;
 }
 
@@ -60,6 +72,9 @@ struct cell *create_compute2_cell(
   C->f2      = f;
   C->args[0] = in0;
   C->args[1] = in1;
+
+  add_subscriber(in0, C);
+  add_subscriber(in1, C);
 
   return R->cell = C;
 }
@@ -81,11 +96,33 @@ int get_cell_value(struct cell *C) {
   assert(UNPOSSIBLE);
 }
 
-void set_cell_value(struct cell *C, int new_value) {
-  C->data = new_value;
+static int op_num = 0;
+
+static void broadcast(struct cell *C) {
+  if (C->op_num == op_num) // => already up to date 
+    return;
+
+  C->op_num = op_num;
+
+  int new_value = get_cell_value(C);
 
   for (callback_t *cb = C->callbacks; cb != NULL; cb = cb->next)
     (cb->f)(cb->arg, new_value);
+
+  for (subscriber_t *S = C->subscribers; S != NULL; S = S->next) {
+    struct cell *consumer = (struct cell *)(S->consumer);
+    if (consumer == C) {
+      printf("WTF\n");
+      continue;
+    }
+    broadcast(consumer);
+  }
+}
+
+void set_cell_value(struct cell *C, int new_value) {
+  C->data = new_value;
+  op_num++;
+  broadcast(C);
 }
 
 callback_id add_callback(struct cell *C, void * arg, callback f) {
@@ -107,6 +144,7 @@ void remove_callback(struct cell *C, callback_id n) {
   printf("lol - fuck off %d %d\n", C->arity, n);
 }
 
+/*
 static int N_callbacks = 0;
 static void print_plus(void *arg, int i) {
   int x = *((int*) arg);
@@ -124,6 +162,14 @@ static void print_minus(void *arg, int i) {
   );
 }
 
+static int x_plus_1(int x) {
+  return x + 1;
+}
+
+static int x_plus_y_plus_3(int x, int y) {
+  return x + y + 3;
+}
+
 int main() {
   struct reactor *R  = create_reactor();
   struct cell *input = create_input_cell(R, 0);
@@ -136,9 +182,20 @@ int main() {
 
   set_cell_value(input, 7);
 
-  add_callback(input, &X, print_minus);
-  set_cell_value(input, 7);
-
   int r2 = get_cell_value(input);
   printf("r2 = %d\n", r2);
+
+  int Y = 100;
+  struct cell *C1 = create_compute1_cell(R, input, x_plus_1);
+  add_callback(C1, &Y, print_minus);
+
+  set_cell_value(input, 8);
+
+  int Z = 200;
+  struct cell *C2 = create_compute2_cell(R, input, C1, x_plus_y_plus_3);
+  add_callback(C2, &Z, print_plus);
+  add_callback(C2, &Z, print_minus);
+
+  set_cell_value(input, 8);
 }
+*/

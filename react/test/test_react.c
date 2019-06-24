@@ -94,7 +94,6 @@ static int plus(int x, int y)
 
 static void test_compute_cells_can_depend_on_other_compute_cells(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 1);
    struct cell *times_two = create_compute1_cell(r, input, times2);
@@ -122,7 +121,6 @@ static void cb_spy(void *obj, int v)
 
 static void test_compute_cells_fire_callbacks(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 1);
    struct cell *output = create_compute1_cell(r, input, plus1);
@@ -145,7 +143,6 @@ static void cb_noop(void *obj, int v)
 
 static void test_compute_cells_dont_access_callback_obj(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 1);
    struct cell *output = create_compute1_cell(r, input, plus1);
@@ -164,7 +161,6 @@ static int big_if_three(int x)
 
 static void test_callbacks_only_fire_on_change(void)
 {
-   TEST_IGNORE();
    struct reactor *r = create_reactor();
    struct cell *input = create_input_cell(r, 1);
    struct cell *output = create_compute1_cell(r, input, big_if_three);

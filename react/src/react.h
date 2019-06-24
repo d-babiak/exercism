@@ -16,6 +16,11 @@ typedef struct boxed_callback {
   void        *arg;
 } callback_t;
 
+typedef struct subscriber {
+  struct subscriber *next;
+  void  *consumer; // circular ref... what do?
+} subscriber_t;
+
 struct cell {
   struct cell *next;
   uint8_t     arity;
@@ -28,6 +33,8 @@ struct cell {
 
   int        next_id;
   callback_t *callbacks;
+  subscriber_t *subscribers;
+  int          op_num;
 };
 
 struct reactor {
