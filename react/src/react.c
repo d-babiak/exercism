@@ -19,10 +19,43 @@ struct reactor *create_reactor() {
   return R;
 }
 
+
 // destroy_reactor should free all cells created under that reactor.
 void destroy_reactor(struct reactor *R) {
+
+  struct cell *nxt;
+  for (struct cell *C = R->cell; C != NULL; C = nxt) {
+    for (callback_t *cb = C->callbacks; cb != NULL; cb = cb->next)
+      free(cb);
+
+    //for (subscriber_t *S = C->subscribers; S != NULL; S = S->next)
+    //  free(S);
+    nxt = C->next;
+    free(C);
+  }
   free(R);
 }
+
+/*
+dmb@dmb ...exercism/c/react % make memcheck # ?_? 
+Compiling memcheck
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==5177==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x55d696e9f304 bp 0x7ffed360c830 sp 0x7ffed360c800 T0)                                                                                                           
+==5177==The signal is caused by a READ memory access.
+==5177==Hint: address points to the zero page.
+    #0 0x55d696e9f303 in destroy_reactor src/react.c:28
+    #1 0x55d696ea335e in test_input_cells_have_value test/test_react.c:21
+    #2 0x55d696ea3168 in UnityDefaultTestRun test/vendor/unity.c:1339
+    #3 0x55d696ea5177 in main test/test_react.c:314
+    #4 0x7f3b19ad9b6a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x26b6a)
+    #5 0x55d696e9f1d9 in _start (/home/dmb/exercism/c/react/memcheck.out+0x31d9)
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV src/react.c:28 in destroy_reactor
+==5177==ABORTING
+make: *** [makefile:27: memcheck] Error 1
+*/
 
 struct cell *create_input_cell(struct reactor *R, int initial_value) {
   struct cell *C = malloc(sizeof(struct cell));
