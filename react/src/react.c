@@ -55,6 +55,7 @@ struct cell *create_compute1_cell(
   C->arity   = 1;
   C->f1      = f;
   C->args[0] = in0;
+  C->data    = get_cell_value(C);
 
   add_subscriber(in0, C);
   
@@ -72,12 +73,14 @@ struct cell *create_compute2_cell(
   C->f2      = f;
   C->args[0] = in0;
   C->args[1] = in1;
+  C->data    = get_cell_value(C);
 
   add_subscriber(in0, C);
   add_subscriber(in1, C);
 
   return R->cell = C;
 }
+
 
 int get_cell_value(struct cell *C) {
   switch (C->arity) {
@@ -96,15 +99,13 @@ int get_cell_value(struct cell *C) {
   assert(UNPOSSIBLE);
 }
 
-static int op_num = 0;
+static void publish(struct cell *C, int i) {
+  int new_value = get_cell_value(C);
 
-static void broadcast(struct cell *C) {
-  if (C->op_num == op_num) // => already up to date 
+  if (!(i == 0 || C->data != new_value))
     return;
 
-  C->op_num = op_num;
-
-  int new_value = get_cell_value(C);
+  C->data = new_value;
 
   for (callback_t *cb = C->callbacks; cb != NULL; cb = cb->next)
     (cb->f)(cb->arg, new_value);
@@ -115,14 +116,17 @@ static void broadcast(struct cell *C) {
       printf("WTF\n");
       continue;
     }
-    broadcast(consumer);
+    publish(consumer, i + 1);
   }
 }
 
 void set_cell_value(struct cell *C, int new_value) {
+  if (new_value == C->data)
+    return;
+
   C->data = new_value;
-  op_num++;
-  broadcast(C);
+
+  publish(C, 0);
 }
 
 callback_id add_callback(struct cell *C, void * arg, callback f) {
@@ -145,6 +149,27 @@ void remove_callback(struct cell *C, callback_id n) {
 }
 
 /*
+static int big_if_three(int x) {
+   return x < 3 ? 111 : 222;
+}
+
+void console_log(void *y, int x) {
+  int i = *((int *) y);
+  printf("console_log: %d %d\n", i, x);
+}
+
+int main() {
+   struct reactor *r = create_reactor();
+   struct cell *input = create_input_cell(r, 1);
+   struct cell *output = create_compute1_cell(r, input, big_if_three);
+
+   int Y = 42; 
+   add_callback(output, &Y, console_log);
+
+   set_cell_value(input, 2);
+
+   set_cell_value(input, 4);
+}
 static int N_callbacks = 0;
 static void print_plus(void *arg, int i) {
   int x = *((int*) arg);
